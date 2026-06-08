@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>数据决策中心 | 荷兰 vs 乌兹别克斯坦 · 国际友谊赛深度分析</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0c12; font-family: 'Inter', sans-serif; color: #eef2ff; padding: 20px; }
+        .dashboard-layout { display: flex; gap: 24px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
+        .sidebar-left { width: 320px; flex-shrink: 0; position: sticky; top: 20px; display: flex; flex-direction: column; gap: 1.5rem; }
+        .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5rem; }
+        .card { background: rgba(18, 20, 28, 0.85); backdrop-filter: blur(2px); border: 1px solid rgba(79, 70, 229, 0.25); border-radius: 28px; padding: 1.25rem 1.5rem; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5); transition: all 0.2s ease; }
+        .card:hover { border-color: rgba(79, 70, 229, 0.6); background: rgba(22,24,34,0.9); }
+        .badge { background: #2d2f3e; padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.75rem; font-weight: 500; color: #cbd5e6; display: inline-flex; align-items: center; gap: 4px; }
+        .vs-badge { background: #4f46e5; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 60px; font-weight: 800; font-size: 1.2rem; box-shadow: 0 0 12px #4f46e5; }
+        .progress-bar-custom { height: 8px; background: #2a2c3a; border-radius: 12px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 12px; background: linear-gradient(90deg, #4f46e5, #818cf8); }
+        .team-chip { background: #1e1f2c; padding: 6px 12px; border-radius: 50px; font-weight: 500; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; }
+        .odds-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin: 8px 0; }
+        .glow-text { color: #facc15; }
+        hr { border-color: #2d2f3e; margin: 12px 0; }
+        .schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+        .schedule-item { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 10px; border-left: 3px solid #4f46e5; }
+        .schedule-date { font-size: 0.7rem; color: #a5b4fc; font-weight: 500; }
+        .schedule-match { font-weight: 600; font-size: 0.85rem; margin: 5px 0 2px; }
+        .schedule-tournament { font-size: 0.65rem; color: #94a3b8; }
+        .upload-zone { border: 2px dashed #4f46e5; border-radius: 24px; background: rgba(79,70,229,0.08); transition: 0.2s; cursor: pointer; padding: 16px; text-align: center; }
+        .upload-zone:hover { background: rgba(79,70,229,0.15); border-color: #818cf8; }
+        .file-list { max-height: 200px; overflow-y: auto; font-size: 0.75rem; margin-top: 12px; }
+        .file-item { background: #1e1f2c; border-radius: 40px; padding: 5px 12px; margin: 6px 0; display: flex; align-items: center; justify-content: space-between; }
+        .btn-outline { background: transparent; border: 1px solid #4f46e5; color: #cbd5e6; padding: 6px 14px; border-radius: 60px; font-size: 0.75rem; transition: 0.2s; cursor: pointer; }
+        .btn-outline:hover { background: #4f46e5; color: white; }
+        .btn-primary { background: #4f46e5; border: none; color: white; padding: 6px 14px; border-radius: 60px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { background: #6366f1; transform: scale(0.98); }
+        .grid-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .table-mini { width: 100%; font-size: 0.8rem; border-collapse: collapse; }
+        .table-mini td, .table-mini th { padding: 8px 4px; border-bottom: 1px solid #2a2c3a; }
+        @media (max-width: 900px) { .dashboard-layout { flex-direction: column; } .sidebar-left { width: 100%; position: static; order: 2; } .main-content { order: 1; } body { padding: 16px; } }
+        .toast-msg { position: fixed; bottom: 20px; right: 20px; background: #1e293b; border-left: 4px solid #4ade80; padding: 10px 16px; border-radius: 12px; font-size: 0.8rem; z-index: 1000; box-shadow: 0 4px 12px black; }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+    <!-- 左侧边栏 -->
+    <div class="sidebar-left">
+        <!-- 赛程多列卡片 -->
+        <div class="card">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"><i class="fas fa-calendar-week"></i><h3 style="font-size: 1.2rem;">近期赛程</h3><span class="badge">多列视图</span></div>
+            <div class="schedule-grid">
+                <div class="schedule-item"><div class="schedule-date">06-09 02:45</div><div class="schedule-match">🇳🇱 荷兰 vs 乌兹别克 🇺🇿</div><div class="schedule-tournament">国际友谊 · 中立场</div></div>
+                <div class="schedule-item"><div class="schedule-date">06-04 国际友谊</div><div class="schedule-match">荷兰 0-1 阿尔及利亚</div><div class="schedule-tournament">已赛 · 主队失利</div></div>
+                <div class="schedule-item"><div class="schedule-date">06-02 国际友谊</div><div class="schedule-match">加拿大 2-0 乌兹别克</div><div class="schedule-tournament">已赛 · 客队告负</div></div>
+                <div class="schedule-item"><div class="schedule-date">06-15 世界杯</div><div class="schedule-match">荷兰 🇳🇱 vs 日本 🇯🇵</div><div class="schedule-tournament">未来焦点战</div></div>
+                <div class="schedule-item"><div class="schedule-date">06-18 国际友谊</div><div class="schedule-match">乌兹别克 vs 哥伦比亚</div><div class="schedule-tournament">中立场热身</div></div>
+                <div class="schedule-item"><div class="schedule-date">06-21 世界杯</div><div class="schedule-match">荷兰 vs 加纳 (预测)</div><div class="schedule-tournament">小组赛</div></div>
+            </div>
+        </div>
+
+        <!-- 数据上传中心 - 具备实际上传功能（localStorage持久化） -->
+        <div class="card">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;"><i class="fas fa-cloud-upload-alt"></i><h3 style="font-size: 1.2rem;">数据上传中心</h3><span class="badge">持久化存储</span></div>
+            
+            <!-- 待上传队列区域 -->
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;"><span><i class="fas fa-inbox"></i> 待上传队列</span><span id="pendingCountBadge" class="badge">0个文件</span></div>
+                <div class="upload-zone" id="uploadZone" style="margin-top: 8px;">
+                    <i class="fas fa-file-upload" style="font-size: 1.8rem; color: #818cf8;"></i>
+                    <p style="margin: 8px 0; font-size: 0.85rem;">点击或拖拽文件至此区域<br>支持 JPG/PNG/JSON/CSV/TXT/PDF</p>
+                    <input type="file" id="fileInput" multiple style="display: none;" accept=".jpg,.jpeg,.png,.json,.csv,.txt,.pdf">
+                    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 6px;">
+                        <button class="btn-outline" id="uploadBtn" type="button"><i class="fas fa-folder-open"></i> 选择文件</button>
+                        <button class="btn-outline" id="clearPendingBtn" type="button"><i class="fas fa-trash-alt"></i> 清空队列</button>
+                    </div>
+                </div>
+                <div id="pendingFileList" class="file-list" style="min-height: 70px; background: rgba(0,0,0,0.2); border-radius: 20px; padding: 6px;">
+                    <div class="team-chip" style="background: #2a2c3a;"><i class="fas fa-info-circle"></i> 暂无待上传文件</div>
+                </div>
+                <button id="confirmUploadBtn" class="btn-primary" style="width: 100%; margin-top: 12px; padding: 8px;"><i class="fas fa-database"></i> 确认上传到数据仓库</button>
+            </div>
+            
+            <!-- 已上传资料库 (持久化) -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center;"><span><i class="fas fa-archive"></i> 已上传资料库</span><span id="storedCountBadge" class="badge">0个文件</span></div>
+                <div id="storedFileList" class="file-list" style="min-height: 100px; background: rgba(0,0,0,0.2); border-radius: 20px; padding: 6px; margin-top: 8px;">
+                    <div class="team-chip" style="background: #2a2c3a;"><i class="fas fa-cloud-upload-alt"></i> 暂无已上传文件，请选择文件并点击确认上传</div>
+                </div>
+                <button id="clearStorageBtn" class="btn-outline" style="width: 100%; margin-top: 8px;"><i class="fas fa-trash-alt"></i> 清空所有已上传文件</button>
+            </div>
+        </div>
+        <!-- 雷达快讯 -->
+        <div class="card"><div><i class="fas fa-microphone-alt"></i> <strong>雷达快讯</strong></div><div style="font-size:0.8rem; margin-top:8px;">✅ 荷兰全主力出战 · 乌兹别克轮换后防<br>✅ 中立场晴好，利于技术流<br>✅ 冷门指数27，爆冷概率较低</div></div>
+    </div>
+
+    <!-- 右侧主内容区（分析数据保持不变） -->
+    <div class="main-content">
+        <div class="card"><div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 12px;"><div style="display: flex; align-items: center; gap: 20px;"><div style="text-align: center;"><div style="font-size: 1.5rem; font-weight: 800;">🇳🇱 荷兰</div><div class="badge">FIFA 7</div></div><div class="vs-badge">VS</div><div style="text-align: center;"><div style="font-size: 1.5rem; font-weight: 800;">🇺🇿 乌兹别克斯坦</div><div class="badge">FIFA 50</div></div><div class="badge"><i class="fas fa-calendar-alt"></i> 2026-06-09 02:45</div><div class="badge"><i class="fas fa-map-marker-alt"></i> 纽约伊坎体育场 · 中立场</div><div class="badge"><i class="fas fa-sun"></i> 23°C 晴</div></div><div style="font-family: monospace; background: #00000055; padding: 6px 14px; border-radius: 60px;"><i class="fas fa-clock"></i> 距开赛 <span id="matchCountdown">06:03:09</span></div></div><div style="margin-top: 12px;"><i class="fas fa-chart-pie"></i> 综合实力指数: <strong>荷兰65</strong> vs <strong>乌兹别克35</strong></div></div>
+
+        <div class="grid-overview">
+            <div class="card"><div style="display: flex; justify-content: space-between;"><h3><i class="fas fa-percent"></i> 胜平负概率</h3><span class="badge">指数转换</span></div><div style="margin: 15px 0;"><div style="display: flex; justify-content: space-between;"><span style="color:#4ade80;">主胜 77% ↑</span><span style="color:#facc15;">平局 15% ↓</span><span style="color:#f87171;">客胜 8% ↓</span></div><div class="progress-bar-custom" style="display: flex;"><div style="width:77%; background:#4ade80;"></div><div style="width:15%; background:#facc15;"></div><div style="width:8%; background:#f87171;"></div></div><div class="odds-row"><span>百家平均</span><span><span class="badge">1.27</span> <span class="badge">5.28</span> <span class="badge">9.50</span></span></div><div class="odds-row"><span>竞彩官方</span><span><span class="badge">1.14</span> <span class="badge">5.85</span> <span class="badge">12.50</span></span></div></div></div>
+            <div class="card"><h3><i class="fas fa-handicap"></i> 亚洲指数 & 大小球</h3><div><span>典型盘口: </span><strong class="glow-text">球半/两球</strong> (升盘)</div><div class="odds-row"><span>Bet365</span><span>1.80↑ 球半/两球 2.00↓</span></div><div class="odds-row"><span>大小球中位数</span><span><strong>3.0</strong> 大球1.85</span></div><hr><div><i class="fas fa-bolt"></i> 冷门指数27/100 · 爆冷概率偏低</div><div class="progress-bar-custom mt-1"><div class="progress-fill" style="width:27%; background:#f97316;"></div></div></div>
+            <div class="card"><h3><i class="fas fa-radar"></i> 九维雷达 · 投注趋势</h3><canvas id="radarChart" style="max-height: 140px; width:100%"></canvas><div style="margin-top: 8px;"><div class="team-chip">主胜投注占比78%</div><div class="progress-bar-custom mt-1"><div class="progress-fill" style="width:78%"></div></div></div></div>
+        </div>
+
+        <div class="grid-overview">
+            <div class="card"><h3><i class="fas fa-trophy"></i> 近期状态 & 赢盘</h3><div><strong>🇳🇱 荷兰近10场</strong> 6胜3平1负 | 赢盘率52%</div><div><strong>🇺🇿 乌兹别克近10场</strong> 3胜4平3负 | 赢盘率56%</div><div class="progress-bar-custom mt-1"><div style="width:52%; background:#3b82f6; height:100%;"></div></div><div class="mt-2">历史交锋: 无记录，遭遇战</div></div>
+            <div class="card"><h3><i class="fas fa-users"></i> 阵容身价 & 实力</h3><div class="odds-row"><span>🇳🇱 荷兰总身价</span><span><strong>≈5.87亿欧</strong></span></div><div class="odds-row"><span>🇺🇿 乌兹别克总身价</span><span><strong>≈3450万欧</strong></span></div><div class="progress-bar-custom"><div class="progress-fill" style="width:94%"></div></div><div><i class="fas fa-exclamation-triangle"></i> 廷贝尔缺阵影响; 乌兹别克阵容齐整</div><div>预计阵型: 荷兰4-3-3 vs 乌兹别克3-4-3</div></div>
+            <div class="card"><h3><i class="fas fa-futbol"></i> 总进球数 & 热门比分</h3><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="badge">2球 4.25</span><span class="badge">3球 3.15</span><span class="badge">4球 4.20</span></div><canvas id="goalChart" style="max-height: 130px"></canvas><div><span class="badge">🔥 最可能比分: 2-0 (5.00)</span> <span class="badge">3-0 (6.25)</span></div><div>半全场胜胜 1.51</div></div>
+        </div>
+        <div class="grid-overview">
+            <div class="card"><h3>欧指核心公司 & 凯利</h3><table class="table-mini"><thead><tr><th>公司</th><th>主胜</th><th>平局</th><th>客胜</th><th>凯利</th></tr></thead><tbody><tr><td>百家平均</td><td>1.27</td><td>5.28</td><td>9.50</td><td>0.93</td></tr><tr><td>竞彩官方</td><td>1.14</td><td>5.85</td><td>12.50</td><td>0.83</td></tr><tr><td>威廉希尔</td><td>1.25</td><td>4.80</td><td>11.00</td><td>0.94</td></tr></tbody></table></div>
+            <div class="card"><h3>亚盘即时盘口水位</h3><table class="table-mini"><thead><tr><th>公司</th><th>盘口</th><th>主队水</th><th>客队水</th></tr></thead><tbody><tr><td>Bet365</td><td>球半/两球</td><td>1.80↑</td><td>2.00↓</td></tr><tr><td>澳彩</td><td>球半/两球</td><td>1.86↓</td><td>1.92↑</td></tr><tr><td>平博</td><td>球半/两球</td><td>1.82↑</td><td>2.03↓</td></tr></tbody></table></div>
+            <div class="card"><h3><i class="fas fa-microphone-alt"></i> 专家视角</h3><div>🔥 稳拿红弹俱乐部 11连中</div><div>🎯 栋哥聊球 10连红</div><div>✨ 红单计划 30期连红 | 近7日命中79%+</div><hr><div><i class="fas fa-chart-simple"></i> 内参密报: 荷兰进攻转化率碾压，让球胜信心充足。</div></div>
+        </div>
+        <div class="grid-overview">
+            <div class="card"><h3>技术统计 (近20场)</h3><div>场均射门: 荷兰7.70 / 对手12.95</div><div>场均进球1.55 / 失球1.30</div><div>控球率48.36%</div></div>
+            <div class="card"><h3>泊松分布 & 爆冷预警</h3><div>预期进球: 荷兰2.14 vs 0.57</div><div>最大概率总进球2~3球(43%)</div><div class="badge" style="margin-top: 8px;">综合爆冷可能性较低 16.2%</div></div>
+            <div class="card"><h3>让球/半全场参考</h3><div>胜胜(半全) 竞彩1.51↑</div><div>让球(-1)胜 倾向穿盘概率＞55%</div><div class="team-chip mt-2"><i class="fas fa-flag-checkered"></i> 预测净胜2球或以上</div></div>
+        </div>
+        <div class="card"><div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;"><div><i class="fas fa-newspaper"></i> <strong>优质情报· 赛事走向</strong> 突发: 荷兰全主力出战，乌兹别克斯坦轮换后防。</div><div><i class="fas fa-chart-line" style="color:#facc15;"></i> <strong>🔮 预测比分：</strong> 荷兰 <span style="font-size:1.3rem; font-weight:800;">3 - 0</span> 乌兹别克</div><div><i class="fas fa-futbol"></i> <strong>⚽ 总进球数预测：</strong> 3 球 &nbsp;<span class="badge">峰值3球</span></div></div></div>
+    </div>
+</div>
+
+<script>
+    // 倒计时
+    function updateCountdown() { const matchTime = new Date(2026,5,9,2,45,0); const now = new Date(); let diff = matchTime-now; if(diff<0){ document.getElementById('matchCountdown').innerText="比赛进行中"; return; } let h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000); document.getElementById('matchCountdown').innerText=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; setTimeout(updateCountdown,1000); } updateCountdown();
+    // 雷达图
+    new Chart(document.getElementById('radarChart'), { type:'radar', data:{ labels:['进攻效率','防守硬度','中场控制','定位球','反击速度','经验指数'], datasets:[{ label:'荷兰', data:[8.9,8.2,8.5,7.4,8.1,9.0], borderColor:'#4f46e5', backgroundColor:'rgba(79,70,229,0.2)', pointBackgroundColor:'#818cf8', borderWidth:2 },{ label:'乌兹别克', data:[4.2,5.1,4.6,5.3,4.8,4.2], borderColor:'#facc15', backgroundColor:'rgba(250,204,21,0.15)', pointBackgroundColor:'#facc15', borderWidth:2 }] }, options:{ responsive:true, maintainAspectRatio:true, scales:{ r:{ beginAtZero:true, max:10, ticks:{ stepSize:2, color:'#aaa' }, grid:{ color:'#2d2f3e' } } }, plugins:{ legend:{ labels:{ color:'#eef2ff' } } } } });
+    new Chart(document.getElementById('goalChart'), { type:'bar', data:{ labels:['0球','1球','2球','3球','4球','5+球'], datasets:[{ label:'概率 (%)', data:[7.2,20.1,29.4,26.8,12.5,4.0], backgroundColor:'#4f46e5', borderRadius:8 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{ labels:{ color:'#cbd5e6' } } }, scales:{ y:{ grid:{ color:'#2a2c3a' }, ticks:{ color:'#b9c3dc' } }, x:{ ticks:{ color:'#b9c3dc' } } } } });
+
+    // ----- 实际上传功能 (localStorage持久化) -----
+    let pendingFiles = [];   // 待上传队列 (File对象数组)
+    const STORAGE_KEY = 'football_data_files';
+    
+    // 加载已存储文件列表
+    function loadStoredFiles() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if(stored) {
+            try {
+                return JSON.parse(stored);
+            } catch(e) { return []; }
+        }
+        return [];
+    }
+    function saveStoredFiles(filesMeta) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filesMeta));
+    }
+    // 渲染已上传资料库
+    function renderStoredFiles() {
+        const filesMeta = loadStoredFiles();
+        const container = document.getElementById('storedFileList');
+        const countSpan = document.getElementById('storedCountBadge');
+        countSpan.innerText = `${filesMeta.length}个文件`;
+        if(filesMeta.length === 0) {
+            container.innerHTML = `<div class="team-chip" style="background:#2a2c3a;"><i class="fas fa-cloud-upload-alt"></i> 暂无已上传文件，请选择文件并点击确认上传</div>`;
+            return;
+        }
+        let html = '';
+        filesMeta.forEach((meta, idx) => {
+            html += `<div class="file-item"><i class="fas fa-file"></i> ${meta.name} <span style="font-size:0.65rem;">(${(meta.size/1024).toFixed(0)}KB) ${meta.uploadTime}</span><span class="badge" style="cursor:pointer;" onclick="removeStoredFile(${idx})"><i class="fas fa-times-circle"></i></span></div>`;
+        });
+        container.innerHTML = html;
+    }
+    // 从存储中删除单个文件
+    window.removeStoredFile = function(index) {
+        let filesMeta = loadStoredFiles();
+        filesMeta.splice(index,1);
+        saveStoredFiles(filesMeta);
+        renderStoredFiles();
+        showToast('已从资料库移除文件', '#f87171');
+    };
+    // 清空所有已上传
+    document.getElementById('clearStorageBtn').addEventListener('click',()=>{
+        if(confirm('确定清空所有已上传文件吗？数据将永久删除。')) {
+            saveStoredFiles([]);
+            renderStoredFiles();
+            showToast('已清空所有已上传文件', '#facc15');
+        }
+    });
+    
+    // 渲染待上传队列
+    function renderPending() {
+        const container = document.getElementById('pendingFileList');
+        const countSpan = document.getElementById('pendingCountBadge');
+        countSpan.innerText = `${pendingFiles.length}个文件`;
+        if(pendingFiles.length === 0) {
+            container.innerHTML = `<div class="team-chip" style="background:#2a2c3a;"><i class="fas fa-info-circle"></i> 暂无待上传文件</div>`;
+            return;
+        }
+        let html = '';
+        pendingFiles.forEach((file, idx) => {
+            let icon = file.type.includes('image') ? 'fa-image' : 'fa-file';
+            html += `<div class="file-item"><i class="fas ${icon}"></i> ${file.name} <span style="font-size:0.65rem;">(${(file.size/1024).toFixed(0)}KB)</span><span class="badge" style="cursor:pointer;" onclick="removePendingFile(${idx})"><i class="fas fa-times-circle"></i></span></div>`;
+        });
+        container.innerHTML = html;
+    }
+    window.removePendingFile = function(idx) { pendingFiles.splice(idx,1); renderPending(); };
+    function clearPending() { pendingFiles = []; renderPending(); }
+    document.getElementById('clearPendingBtn').addEventListener('click', clearPending);
+    
+    // 实际上传: 将 pendingFiles 存入 localStorage (仅存储元数据，模拟上传到仓库)
+    function confirmUpload() {
+        if(pendingFiles.length === 0) {
+            showToast('请先选择要上传的文件', '#f97316');
+            return;
+        }
+        const existing = loadStoredFiles();
+        const newEntries = [];
+        for(let file of pendingFiles) {
+            // 避免完全重复（同文件名+大小）
+            if(!existing.some(f => f.name === file.name && f.size === file.size)) {
+                newEntries.push({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    uploadTime: new Date().toLocaleString()
+                });
+            } else {
+                showToast(`文件 ${file.name} 已存在，跳过`, '#facc15');
+            }
+        }
+        if(newEntries.length === 0) {
+            showToast('没有新文件可上传 (可能重复)', '#f97316');
+            return;
+        }
+        const updated = [...existing, ...newEntries];
+        saveStoredFiles(updated);
+        // 清空待上传队列
+        clearPending();
+        renderStoredFiles();
+        showToast(`成功上传 ${newEntries.length} 个文件到数据仓库！`, '#4ade80');
+    }
+    document.getElementById('confirmUploadBtn').addEventListener('click', confirmUpload);
+    
+    // 文件选择 & 拖拽
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    function addFilesToPending(files) {
+        for(let file of files) {
+            if(file.size > 50*1024*1024) { showToast(`${file.name} 超过50MB，已跳过`, '#f87171'); continue; }
+            if(!pendingFiles.some(f=>f.name===file.name && f.size===file.size)) {
+                pendingFiles.push(file);
+            }
+        }
+        renderPending();
+    }
+    uploadBtn.addEventListener('click', ()=>fileInput.click());
+    fileInput.addEventListener('change', (e)=>{ addFilesToPending(e.target.files); fileInput.value=''; });
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', (e)=>{ e.preventDefault(); zone.style.borderColor='#a5b4fc'; });
+    zone.addEventListener('dragleave', ()=>{ zone.style.borderColor='#4f46e5'; });
+    zone.addEventListener('drop', (e)=>{ e.preventDefault(); zone.style.borderColor='#4f46e5'; addFilesToPending(e.dataTransfer.files); });
+    
+    // 提示Toast
+    function showToast(msg, bgColor='#4f46e5') {
+        let toast = document.createElement('div');
+        toast.className = 'toast-msg';
+        toast.style.background = bgColor;
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(()=>{ toast.remove(); }, 2500);
+    }
+    
+    // 初始化已上传列表
+    renderStoredFiles();
+    renderPending();
+</script>
+</body>
+</html>
