@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ 足球竞猜分析系统 - 本地版</title>
+    <style>
+        :root {
+            --bg: #0f1119;
+            --card: #1a1d2b;
+            --card2: #212433;
+            --accent: #00c9a7;
+            --accent2: #4dabf7;
+            --danger: #ff6b6b;
+            --warning: #ffc542;
+            --text: #e2e4e9;
+            --text2: #a0a4b4;
+            --border: #2a2d3a;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(0, 201, 167, 0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 60%, rgba(77, 171, 247, 0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 80%, rgba(255, 197, 66, 0.03) 0%, transparent 50%);
+        }
+
+        /* ========== 顶部导航 ========== */
+        .navbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow);
+        }
+        .navbar .logo {
+            font-size: 1.4em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar .logo .icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), #00b894);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--card2);
+            border-radius: 30px;
+            padding: 4px;
+        }
+        .nav-tab {
+            padding: 8px 18px;
+            border-radius: 26px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            color: var(--text2);
+            white-space: nowrap;
+        }
+        .nav-tab.active {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+            box-shadow: 0 2px 12px rgba(0, 201, 167, 0.35);
+        }
+        .nav-tab:hover:not(.active) {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .db-status {
+            font-size: 0.78em;
+            color: var(--text2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .db-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 201, 167, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(0, 201, 167, 0);
+            }
+        }
+
+        /* ========== 主布局 ========== */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ========== 面板区域 ========== */
+        .panel {
+            display: none;
+            animation: fadeSlideIn 0.4s ease;
+        }
+        .panel.active {
+            display: block;
+        }
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 26px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        .card:hover {
+            border-color: #3a3d50;
+        }
+        .card-header {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.3px;
+        }
+        .card-header .badge {
+            font-size: 0.7em;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 900px) {
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .nav-tabs {
+                gap: 2px;
+            }
+            .nav-tab {
+                padding: 6px 12px;
+                font-size: 0.78em;
+            }
+        }
+
+        /* ========== 表单 ========== */
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 130px;
+            flex: 1;
+        }
+        .form-group label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            color: var(--text);
+            font-size: 0.9em;
+            transition: var(--transition);
+            font-family: inherit;
+            width: 100%;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 201, 167, 0.1);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+        .btn-primary:hover {
+            background: #00d9b5;
+            box-shadow: 0 4px 16px rgba(0, 201, 167, 0.4);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: var(--card2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            border-color: #5a5d70;
+            background: #2a2d3d;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #ff5252;
+            box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
+        }
+        .btn-sm {
+            padding: 6px 13px;
+            font-size: 0.78em;
+            border-radius: 6px;
+        }
+        .btn-xs {
+            padding: 3px 9px;
+            font-size: 0.7em;
+            border-radius: 4px;
+        }
+        .btn-accent2 {
+            background: var(--accent2);
+            color: #000;
+        }
+        .btn-accent2:hover {
+            background: #5dbcf7;
+            box-shadow: 0 4px 16px rgba(77, 171, 247, 0.4);
+        }
+
+        /* ========== 表格 ========== */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88em;
+        }
+        th,
+        td {
+            padding: 11px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        th {
+            background: var(--card2);
+            font-weight: 700;
+            color: var(--text2);
+            font-size: 0.78em;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.015);
+        }
+        .highlight-win {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .highlight-lose {
+            color: var(--danger);
+            font-weight: 700;
+        }
+        .highlight-draw {
+            color: var(--warning);
+            font-weight: 700;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .tag-home {
+            background: rgba(0, 201, 167, 0.2);
+            color: var(--accent);
+        }
+        .tag-away {
+            background: rgba(77, 171, 247, 0.2);
+            color: var(--accent2);
+        }
+
+        /* ========== 分析结果卡片 ========== */
+        .analysis-card {
+            background: var(--card2);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        .analysis-card.recommend {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 201, 167, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .analysis-card.recommend::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.15;
+        }
+        .score-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+        .score-high {
+            background: rgba(0, 201, 167, 0.2);
+            color: var(--accent);
+            border: 3px solid var(--accent);
+        }
+        .score-mid {
+            background: rgba(255, 197, 66, 0.2);
+            color: var(--warning);
+            border: 3px solid var(--warning);
+        }
+        .score-low {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--danger);
+            border: 3px solid var(--danger);
+        }
+        .progress-bar-wrap {
+            height: 8px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 6px 0;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+
+        /* ========== 弹窗 ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+        .modal h3 {
+            margin-bottom: 16px;
+        }
+        .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text2);
+            font-size: 1.4em;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .close-btn:hover {
+            color: var(--text);
+        }
+
+        /* ========== Toast ========== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.88em;
+            animation: slideInRight 0.35s ease;
+            box-shadow: var(--shadow);
+        }
+        .toast.success {
+            background: #00b894;
+        }
+        .toast.error {
+            background: #e74c3c;
+        }
+        .toast.info {
+            background: #4dabf7;
+        }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ========== 空状态 ========== */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text2);
+        }
+        .empty-state .icon-lg {
+            font-size: 3em;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* ========== 导入区域 ========== */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text2);
+        }
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(0, 201, 167, 0.03);
+            color: var(--accent);
+        }
+        .drop-zone input {
+            display: none;
+        }
+
+        /* scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3a3d50;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5a5d70;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 导航栏 ==================== -->
+    <nav class="navbar">
+        <div class="logo">
+            <div class="icon">⚽</div>
+            <span>足球竞猜分析系统</span>
+        </div>
+        <div class="nav-tabs" id="navTabs">
+            <button class="nav-tab active" data-panel="panel-data">📋 数据管理</button>
+            <button class="nav-tab" data-panel="panel-analysis">📊 智能分析</button>
+            <button class="nav-tab" data-panel="panel-history">📜 历史记录</button>
+            <button class="nav-tab" data-panel="panel-import">📥 数据采集</button>
+        </div>
+        <div class="db-status">
+            <span class="db-dot"></span> 本地数据库
+            <span style="font-weight:700;color:var(--accent);" id="recordCount">0</span> 条记录
+        </div>
+    </nav>
+
+    <!-- ==================== Toast容器 ==================== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <div class="main-container">
+
+        <!-- ========== 面板1：数据管理 ========== -->
+        <div class="panel active" id="panel-data">
+            <div class="grid-2">
+                <!-- 录入表单 -->
+                <div class="card">
+                    <div class="card-header">📝 录入比赛数据 <span class="badge">手动录入</span></div>
+                    <form id="matchForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>联赛</label>
+                                <select id="league" required>
+                                    <option value="">选择联赛</option>
+                                    <option value="英超">英超</option>
+                                    <option value="西甲">西甲</option>
+                                    <option value="德甲">德甲</option>
+                                    <option value="意甲">意甲</option>
+                                    <option value="法甲">法甲</option>
+                                    <option value="中超">中超</option>
+                                    <option value="欧冠">欧冠</option>
+                                    <option value="欧联杯">欧联杯</option>
+                                    <option value="世界杯">世界杯</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>比赛日期</label>
+                                <input type="date" id="matchDate" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>🏠 主队</label>
+                                <input type="text" id="homeTeam" placeholder="主队名称" required list="teamList">
+                            </div>
+                            <div class="form-group" style="max-width:60px;min-width:50px;text-align:center;">
+                                <label>比分</label>
+                                <input type="text" id="score" placeholder="2:1" style="text-align:center;">
+                            </div>
+                            <div class="form-group">
+                                <label>🏃 客队</label>
+                                <input type="text" id="awayTeam" placeholder="客队名称" required list="teamList">
+                            </div>
+                        </div>
+                        <datalist id="teamList"></datalist>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>主队近期战绩(近5场)</label>
+                                <input type="text" id="homeRecent" placeholder="如: 胜胜平负胜 或 W W D L W">
+                            </div>
+                            <div class="form-group">
+                                <label>客队近期战绩(近5场)</label>
+                                <input type="text" id="awayRecent" placeholder="如: 负平平胜负 或 L D D W L">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>欧赔-主胜</label>
+                                <input type="number" id="oddsHome" step="0.01" placeholder="如 2.10">
+                            </div>
+                            <div class="form-group">
+                                <label>欧赔-平局</label>
+                                <input type="number" id="oddsDraw" step="0.01" placeholder="如 3.40">
+                            </div>
+                            <div class="form-group">
+                                <label>欧赔-客胜</label>
+                                <input type="number" id="oddsAway" step="0.01" placeholder="如 3.80">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>亚盘盘口</label>
+                                <select id="asianHandicap">
+                                    <option value="">无</option>
+                                    <option value="-0.25">主让平半(-0.25)</option>
+                                    <option value="-0.5">主让半球(-0.5)</option>
+                                    <option value="-0.75">主让半一(-0.75)</option>
+                                    <option value="-1">主让一球(-1)</option>
+                                    <option value="-1.25">主让球半(-1.25)</option>
+                                    <option value="-1.5">主让球半(-1.5)</option>
+                                    <option value="0">平手(0)</option>
+                                    <option value="+0.25">客让平半(+0.25)</option>
+                                    <option value="+0.5">客让半球(+0.5)</option>
+                                    <option value="+0.75">客让半一(+0.75)</option>
+                                    <option value="+1">客让一球(+1)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>主队排名</label>
+                                <input type="number" id="homeRank" placeholder="联赛排名">
+                            </div>
+                            <div class="form-group">
+                                <label>客队排名</label>
+                                <input type="number" id="awayRank" placeholder="联赛排名">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>备注</label>
+                                <input type="text" id="notes" placeholder="伤停信息、天气等">
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">✅ 保存数据</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearForm()">🔄 清空表单</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 数据概览 -->
+                <div class="card">
+                    <div class="card-header">📈 数据概览</div>
+                    <div class="grid-3" id="statsOverview">
+                        <div class="analysis-card" style="text-align:center;">
+                            <div style="font-size:2em;font-weight:800;color:var(--accent);" id="statTotal">0</div>
+                            <div style="color:var(--text2);font-size:0.85em;">总比赛数</div>
+                        </div>
+                        <div class="analysis-card" style="text-align:center;">
+                            <div style="font-size:2em;font-weight:800;color:var(--accent2);" id="statLeagues">0</div>
+                            <div style="color:var(--text2);font-size:0.85em;">覆盖联赛</div>
+                        </div>
+                        <div class="analysis-card" style="text-align:center;">
+                            <div style="font-size:2em;font-weight:800;color:var(--warning);" id="statTeams">0</div>
+                            <div style="color:var(--text2);font-size:0.85em;">涉及球队</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <div class="card-header" style="font-size:0.9em;">📋 最近录入</div>
+                        <div class="table-wrap" style="max-height:280px;overflow-y:auto;">
+                            <table>
+                                <thead><tr><th>日期</th><th>联赛</th><th>主队</th><th>比分</th><th>客队</th><th>操作</th></tr></thead>
+                                <tbody id="recentTableBody"><tr><td colspan="6" class="empty-state">暂无数据</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板2：智能分析 ========== -->
+        <div class="panel" id="panel-analysis">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">🔍 选择分析目标</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>选择比赛</label>
+                            <select id="analysisMatchSelect" onchange="loadAnalysis()">
+                                <option value="">-- 请选择已录入的比赛 --</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-accent2" onclick="loadAnalysis()">🔬 执行分析</button>
+                    </div>
+                    <div id="analysisResult" style="margin-top:14px;">
+                        <div class="empty-state">
+                            <div class="icon-lg">🔍</div>
+                            <p>请先选择一场比赛进行分析</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">🧠 综合推荐引擎 <span class="badge">AI分析</span></div>
+                    <div id="recommendationPanel">
+                        <div class="empty-state">
+                            <div class="icon-lg">🧠</div>
+                            <p>分析后将显示智能推荐</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板3：历史记录 ========== -->
+        <div class="panel" id="panel-history">
+            <div class="card">
+                <div class="card-header">📜 全部比赛记录
+                    <span style="margin-left:auto;display:flex;gap:8px;">
+                        <input type="text" id="searchInput" placeholder="搜索球队/联赛..." style="background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:7px 15px;color:var(--text);font-size:0.85em;width:200px;" oninput="renderHistoryTable()">
+                        <select id="filterLeague" style="background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:7px 12px;color:var(--text);font-size:0.85em;" onchange="renderHistoryTable()">
+                            <option value="">全部联赛</option>
+                        </select>
+                        <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑 清空全部</button>
+                        <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 导出JSON</button>
+                    </span>
+                </div>
+                <div class="table-wrap" style="max-height:55vh;overflow-y:auto;">
+                    <table>
+                        <thead><tr><th>日期</th><th>联赛</th><th>主队</th><th>比分</th><th>客队</th><th>欧赔(主/平/客)</th><th>亚盘</th><th>排名</th><th>操作</th></tr></thead>
+                        <tbody id="historyTableBody"><tr><td colspan="9" class="empty-state">暂无记录</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板4：数据采集/导入 ========== -->
+        <div class="panel" id="panel-import">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">📥 批量导入JSON数据 <span class="badge">推荐</span></div>
+                    <p style="color:var(--text2);margin-bottom:12px;font-size:0.9em;">
+                        支持导入符合格式的JSON数组，可包含多场比赛数据。适合从数据采集脚本导入。
+                    </p>
+                    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                        <div style="font-size:2.5em;">📂</div>
+                        <p>点击选择文件 或 拖拽JSON文件到此处</p>
+                        <p style="font-size:0.75em;color:var(--text2);">支持 .json 文件</p>
+                        <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
+                    </div>
+                    <div style="margin-top:12px;">
+                        <button class="btn btn-secondary btn-sm" onclick="loadSampleData()">📋 加载示例数据</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">📋 JSON格式说明</div>
+                    <pre style="background:var(--card2);padding:14px;border-radius:var(--radius-sm);font-size:0.78em;overflow-x:auto;color:#a8d8c8;max-height:350px;overflow-y:auto;">[
+                            {
+                            "league": "英超",
+                            "date": "2026-06-08",
+                            "home_team": "曼联",
+                            "away_team": "利物浦",
+                            "score": "2:1",
+                            "home_recent": "W W D L W",
+                            "away_recent": "L D W W D",
+                            "odds_home": 2.10,
+                            "odds_draw": 3.40,
+                            "odds_away": 3.80,
+                            "asian_handicap": "-0.5",
+                            "home_rank": 3,
+                            "away_rank": 1,
+                            "notes": "主队主力前锋伤缺"
+                            }
+                            ]</pre>
+                    <p style="font-size:0.78em;color:var(--text2);margin-top:8px;">
+                        💡 近期战绩可用: W(胜) D(平) L(负) 或 胜 平 负
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 详情弹窗 ==================== -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="closeModal(event)">
+        <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+    </div>
+
+    <script>
+        // ==================== 全局状态 ====================
+        const STORAGE_KEY = 'football_analysis_db';
+        let allMatches = [];
+        let currentPanel = 'panel-data';
+
+        // ==================== 初始化 ====================
+        function init() {
+            loadFromStorage();
+            setupNavTabs();
+            setupFormSubmit();
+            setupDropZone();
+            refreshAll();
+            setDefaultDate();
+            updateTeamDatalist();
+            console.log('⚽ 足球竞猜分析系统已就绪 | 数据条数:', allMatches.length);
+        }
+
+        function setDefaultDate() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('matchDate');
+            if (!dateInput.value) dateInput.value = today;
+        }
+
+        // ==================== 存储操作 ====================
+        function loadFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                allMatches = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                allMatches = [];
+                console.error('数据加载失败:', e);
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allMatches));
+            updateRecordCount();
+        }
+
+        function updateRecordCount() {
+            document.getElementById('recordCount').textContent = allMatches.length;
+        }
+
+        // ==================== 导航切换 ====================
+        function setupNavTabs() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const panelId = tab.dataset.panel;
+                    switchPanel(panelId);
+                });
+            });
+        }
+
+        function switchPanel(panelId) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            const panel = document.getElementById(panelId);
+            if (panel) {
+                panel.classList.add('active');
+                currentPanel = panelId;
+                if (panelId === 'panel-analysis') refreshAnalysisSelect();
+                if (panelId === 'panel-history') {
+                    refreshLeagueFilter();
+                    renderHistoryTable();
+                }
+                if (panelId === 'panel-data') refreshRecentTable();
+            }
+        }
+
+        // ==================== Toast ====================
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(120%)';
+                toast.style.transition = '0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ==================== 表单提交 ====================
+        function setupFormSubmit() {
+            document.getElementById('matchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const match = {
+                    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                    league: document.getElementById('league').value,
+                    date: document.getElementById('matchDate').value,
+                    home_team: document.getElementById('homeTeam').value.trim(),
+                    away_team: document.getElementById('awayTeam').value.trim(),
+                    score: document.getElementById('score').value.trim() || '?:?',
+                    home_recent: document.getElementById('homeRecent').value.trim(),
+                    away_recent: document.getElementById('awayRecent').value.trim(),
+                    odds_home: parseFloat(document.getElementById('oddsHome').value) || null,
+                    odds_draw: parseFloat(document.getElementById('oddsDraw').value) || null,
+                    odds_away: parseFloat(document.getElementById('oddsAway').value) || null,
+                    asian_handicap: document.getElementById('asianHandicap').value || null,
+                    home_rank: parseInt(document.getElementById('homeRank').value) || null,
+                    away_rank: parseInt(document.getElementById('awayRank').value) || null,
+                    notes: document.getElementById('notes').value.trim(),
+                    created_at: new Date().toISOString(),
+                };
+
+                if (!match.home_team || !match.away_team || !match.league || !match.date) {
+                    showToast('请填写完整信息：联赛、日期、主队、客队', 'error');
+                    return;
+                }
+                if (match.home_team === match.away_team) {
+                    showToast('主队和客队不能相同', 'error');
+                    return;
+                }
+
+                allMatches.unshift(match);
+                saveToStorage();
+                updateTeamDatalist();
+                clearForm();
+                refreshAll();
+                showToast('✅ 比赛数据已保存！', 'success');
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('matchForm').reset();
+            setDefaultDate();
+            document.getElementById('league').value = '';
+            document.getElementById('asianHandicap').value = '';
+        }
+
+        function updateTeamDatalist() {
+            const teams = new Set();
+            allMatches.forEach(m => {
+                if (m.home_team) teams.add(m.home_team);
+                if (m.away_team) teams.add(m.away_team);
+            });
+            const datalist = document.getElementById('teamList');
+            datalist.innerHTML = '';
+            [...teams].sort().forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                datalist.appendChild(opt);
+            });
+        }
+
+        // ==================== 刷新全部视图 ====================
+        function refreshAll() {
+            updateRecordCount();
+            updateTeamDatalist();
+            refreshRecentTable();
+            refreshStatsOverview();
+            refreshAnalysisSelect();
+            refreshLeagueFilter();
+            if (currentPanel === 'panel-history') renderHistoryTable();
+        }
+
+        function refreshRecentTable() {
+            const tbody = document.getElementById('recentTableBody');
+            const recent = allMatches.slice(0, 15);
+            if (recent.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = recent.map(m => `
+                        <tr>
+                            <td>${m.date || '-'}</td>
+                            <td>${m.league}</td>
+                            <td><span class="tag tag-home">${escHtml(m.home_team)}</span></td>
+                            <td style="font-weight:700;">${m.score || '?:?'}</td>
+                            <td><span class="tag tag-away">${escHtml(m.away_team)}</span></td>
+                            <td>
+                                <button class="btn btn-danger btn-xs" onclick="deleteMatch('${m.id}')">🗑</button>
+                                <button class="btn btn-secondary btn-xs" onclick="viewDetail('${m.id}')">📋</button>
+                            </td>
+                        </tr>`).join('');
+        }
+
+        function refreshStatsOverview() {
+            const leagues = new Set(allMatches.map(m => m.league));
+            const teams = new Set();
+            allMatches.forEach(m => {
+                if (m.home_team) teams.add(m.home_team);
+                if (m.away_team) teams.add(m.away_team);
+            });
+            document.getElementById('statTotal').textContent = allMatches.length;
+            document.getElementById('statLeagues').textContent = leagues.size;
+            document.getElementById('statTeams').textContent = teams.size;
+        }
+
+        function refreshAnalysisSelect() {
+            const sel = document.getElementById('analysisMatchSelect');
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">-- 请选择已录入的比赛 --</option>';
+            allMatches.forEach((m, i) => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent =
+                    `[${m.league}] ${m.home_team} vs ${m.away_team} (${m.date}) ${m.score ? '比分:'+m.score : ''}`;
+                sel.appendChild(opt);
+            });
+            if (currentVal && allMatches.find(m => m.id === currentVal)) {
+                sel.value = currentVal;
+            }
+        }
+
+        function refreshLeagueFilter() {
+            const sel = document.getElementById('filterLeague');
+            const leagues = [...new Set(allMatches.map(m => m.league))].sort();
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">全部联赛</option>';
+            leagues.forEach(l => {
+                const opt = document.createElement('option');
+                opt.value = l;
+                opt.textContent = l;
+                sel.appendChild(opt);
+            });
+            sel.value = currentVal;
+        }
+
+        // ==================== 历史表格 ====================
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            const search = (document.getElementById('searchInput').value || '').toLowerCase();
+            const leagueFilter = document.getElementById('filterLeague').value;
+            let filtered = allMatches;
+            if (search) {
+                filtered = filtered.filter(m =>
+                    (m.home_team && m.home_team.toLowerCase().includes(search)) ||
+                    (m.away_team && m.away_team.toLowerCase().includes(search)) ||
+                    (m.league && m.league.toLowerCase().includes(search)) ||
+                    (m.notes && m.notes.toLowerCase().includes(search))
+                );
+            }
+            if (leagueFilter) {
+                filtered = filtered.filter(m => m.league === leagueFilter);
+            }
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-state">无匹配记录</td></tr>';
+                return;
+            }
+            tbody.innerHTML = filtered.map(m => {
+                const oddsStr = [m.odds_home, m.odds_draw, m.odds_away].map(o => o !== null && o !==
+                    undefined ? o.toFixed(2) : '-').join(' / ');
+                return `
+                        <tr>
+                            <td>${m.date || '-'}</td>
+                            <td>${m.league}</td>
+                            <td>${escHtml(m.home_team)}${m.home_rank ? ' <small style="color:var(--text2)">#'+m.home_rank+'</small>' : ''}</td>
+                            <td style="font-weight:700;">${m.score || '?:?'}</td>
+                            <td>${escHtml(m.away_team)}${m.away_rank ? ' <small style="color:var(--text2)">#'+m.away_rank+'</small>' : ''}</td>
+                            <td>${oddsStr}</td>
+                            <td>${m.asian_handicap || '-'}</td>
+                            <td>${m.home_rank||'-'} / ${m.away_rank||'-'}</td>
+                            <td>
+                                <button class="btn btn-danger btn-xs" onclick="deleteMatch('${m.id}')">🗑</button>
+                                <button class="btn btn-accent2 btn-xs" onclick="analyzeMatchById('${m.id}')">🔬分析</button>
+                            </td>
+                        </tr>`;
+            }).join('');
+        }
+
+        // ==================== 删除 & 清空 ====================
+        function deleteMatch(id) {
+            if (!confirm('确定删除这条比赛记录吗？此操作不可恢复。')) return;
+            allMatches = allMatches.filter(m => m.id !== id);
+            saveToStorage();
+            refreshAll();
+            showToast('已删除记录', 'info');
+        }
+
+        function clearAllData() {
+            if (!confirm('⚠️ 确定清空全部数据吗？此操作不可恢复！\n\n建议先导出数据备份。')) return;
+            allMatches = [];
+            saveToStorage();
+            refreshAll();
+            document.getElementById('analysisResult').innerHTML =
+                '<div class="empty-state"><div class="icon-lg">🔍</div><p>请先选择一场比赛进行分析</p></div>';
+            document.getElementById('recommendationPanel').innerHTML =
+                '<div class="empty-state"><div class="icon-lg">🧠</div><p>分析后将显示智能推荐</p></div>';
+            showToast('全部数据已清空', 'error');
+        }
+
+        function exportData() {
+            if (allMatches.length === 0) {
+                showToast('没有数据可导出', 'error');
+                return;
+            }
+            const blob = new Blob([JSON.stringify(allMatches, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `足球数据备份_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📤 数据已导出！', 'success');
+        }
+
+        // ==================== 文件导入 ====================
+        function setupDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) processFile(file);
+            });
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (file) processFile(file);
+            event.target.value = '';
+        }
+
+        function processFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showToast('请选择JSON格式文件', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!Array.isArray(data)) {
+                        showToast('JSON格式错误：需要数组格式', 'error');
+                        return;
+                    }
+                    let imported = 0;
+                    data.forEach(item => {
+                        if (item.home_team && item.away_team && item.league) {
+                            const match = {
+                                id: Date.now().toString(36) + Math.random().toString(36).substr(2,
+                                    5) + imported,
+                                league: item.league || '未知',
+                                date: item.date || new Date().toISOString().split('T')[0],
+                                home_team: item.home_team,
+                                away_team: item.away_team,
+                                score: item.score || '?:?',
+                                home_recent: item.home_recent || '',
+                                away_recent: item.away_recent || '',
+                                odds_home: parseFloat(item.odds_home) || null,
+                                odds_draw: parseFloat(item.odds_draw) || null,
+                                odds_away: parseFloat(item.odds_away) || null,
+                                asian_handicap: item.asian_handicap || null,
+                                home_rank: parseInt(item.home_rank) || null,
+                                away_rank: parseInt(item.away_rank) || null,
+                                notes: item.notes || '',
+                                created_at: new Date().toISOString(),
+                            };
+                            allMatches.unshift(match);
+                            imported++;
+                        }
+                    });
+                    saveToStorage();
+                    refreshAll();
+                    showToast(`✅ 成功导入 ${imported} 条比赛数据！`, 'success');
+                } catch (err) {
+                    showToast('JSON解析失败：' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function loadSampleData() {
+            const sample = [
+                { league: '英超', date: '2026-06-06', home_team: '曼城', away_team: '阿森纳', score: '3:1',
+                    home_recent: 'W W W D W', away_recent: 'W D W W L', odds_home: 1.85, odds_draw: 3.60,
+                    odds_away: 4.20, asian_handicap: '-0.75', home_rank: 1, away_rank: 2, notes: '榜首大战' },
+                { league: '英超', date: '2026-06-05', home_team: '利物浦', away_team: '切尔西', score: '2:2',
+                    home_recent: 'W L D W D', away_recent: 'L W D D W', odds_home: 2.30, odds_draw: 3.25,
+                    odds_away: 3.10, asian_handicap: '-0.25', home_rank: 3, away_rank: 5, notes: '' },
+                { league: '西甲', date: '2026-06-04', home_team: '巴塞罗那', away_team: '皇家马德里', score: '1:2',
+                    home_recent: 'W D W L L', away_recent: 'W W W D W', odds_home: 2.50, odds_draw: 3.30,
+                    odds_away: 2.75, asian_handicap: '0', home_rank: 2, away_rank: 1, notes: '国家德比' },
+                { league: '德甲', date: '2026-06-03', home_team: '拜仁慕尼黑', away_team: '多特蒙德', score: '4:0',
+                    home_recent: 'W W W W W', away_recent: 'W L D L D', odds_home: 1.55, odds_draw: 4.20,
+                    odds_away: 5.50, asian_handicap: '-1.5', home_rank: 1, away_rank: 6, notes: '拜仁状态极佳' },
+                { league: '意甲', date: '2026-06-02', home_team: 'AC米兰', away_team: '尤文图斯', score: '0:0',
+                    home_recent: 'D L W D L', away_recent: 'D D W L D', odds_home: 2.80, odds_draw: 3.00,
+                    odds_away: 2.60, asian_handicap: '+0.25', home_rank: 7, away_rank: 3, notes: '双方状态均一般' },
+            ];
+            sample.forEach((item, i) => {
+                const match = {
+                    ...item,
+                    id: 'sample_' + Date.now() + '_' + i,
+                    created_at: new Date().toISOString(),
+                };
+                allMatches.unshift(match);
+            });
+            saveToStorage();
+            refreshAll();
+            showToast('📋 已加载5条示例数据！', 'success');
+        }
+
+        // ==================== 分析引擎 ====================
+        function analyzeMatchById(id) {
+            document.getElementById('analysisMatchSelect').value = id;
+            switchPanel('panel-analysis');
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('[data-panel="panel-analysis"]').classList.add('active');
+            setTimeout(() => loadAnalysis(), 100);
+        }
+
+        function loadAnalysis() {
+            const sel = document.getElementById('analysisMatchSelect');
+            const id = sel.value;
+            if (!id) {
+                document.getElementById('analysisResult').innerHTML =
+                    '<div class="empty-state"><div class="icon-lg">🔍</div><p>请先选择一场比赛进行分析</p></div>';
+                document.getElementById('recommendationPanel').innerHTML =
+                    '<div class="empty-state"><div class="icon-lg">🧠</div><p>分析后将显示智能推荐</p></div>';
+                return;
+            }
+            const match = allMatches.find(m => m.id === id);
+            if (!match) {
+                showToast('未找到该比赛', 'error');
+                return;
+            }
+            const analysis = runFullAnalysis(match);
+            renderAnalysisResult(match, analysis);
+            renderRecommendation(match, analysis);
+        }
+
+        function runFullAnalysis(match) {
+            const scores = {};
+            let totalScore = 50;
+            const details = [];
+
+            // 1. 近期战绩分析 (权重25%)
+            const homeRecentParsed = parseRecentForm(match.home_recent);
+            const awayRecentParsed = parseRecentForm(match.away_recent);
+            const homeFormScore = calculateFormScore(homeRecentParsed);
+            const awayFormScore = calculateFormScore(awayRecentParsed);
+            const formDiff = homeFormScore - awayFormScore;
+            scores.form = { home: homeFormScore, away: awayFormScore, diff: formDiff };
+            if (formDiff > 15) { totalScore += 15;
+                details.push('主队近期状态明显优于客队'); } else if (formDiff > 5) { totalScore += 8;
+                details.push('主队近期状态略好'); } else if (formDiff < -15) { totalScore -= 15;
+                details.push('客队近期状态明显优于主队'); } else if (formDiff < -5) { totalScore -= 8;
+                details.push('客队近期状态略好'); } else { details.push('双方近期状态相近'); }
+
+            // 2. 排名分析 (权重15%)
+            if (match.home_rank && match.away_rank) {
+                const rankDiff = match.away_rank - match.home_rank;
+                scores.rank = { home: match.home_rank, away: match.away_rank, diff: rankDiff };
+                if (rankDiff > 8) { totalScore += 12;
+                    details.push('主队排名大幅领先'); } else if (rankDiff > 3) { totalScore += 7;
+                    details.push('主队排名占优'); } else if (rankDiff < -8) { totalScore -= 12;
+                    details.push('客队排名大幅领先'); } else if (rankDiff < -3) { totalScore -= 7;
+                    details.push('客队排名占优'); } else { details.push('双方排名接近'); }
+            } else {
+                scores.rank = null;
+                details.push('排名数据缺失');
+            }
+
+            // 3. 赔率分析 (权重25%)
+            if (match.odds_home && match.odds_draw && match.odds_away) {
+                scores.odds = { home: match.odds_home, draw: match.odds_draw, away: match.odds_away };
+                const impliedHome = 1 / match.odds_home;
+                const impliedDraw = 1 / match.odds_draw;
+                const impliedAway = 1 / match.odds_away;
+                const total = impliedHome + impliedDraw + impliedAway;
+                const probHome = impliedHome / total;
+                const probAway = impliedAway / total;
+                const probDiff = probHome - probAway;
+                if (probDiff > 0.2) { totalScore += 14;
+                    details.push('赔率强烈看好主队'); } else if (probDiff > 0.08) { totalScore += 8;
+                    details.push('赔率倾向主队'); } else if (probDiff < -0.2) { totalScore -= 14;
+                    details.push('赔率强烈看好客队'); } else if (probDiff < -0.08) { totalScore -= 8;
+                    details.push('赔率倾向客队'); } else { details.push('赔率显示势均力敌'); }
+            } else {
+                scores.odds = null;
+                details.push('赔率数据缺失');
+            }
+
+            // 4. 亚盘分析 (权重20%)
+            if (match.asian_handicap) {
+                scores.asian = match.asian_handicap;
+                const handicapVal = parseFloat(match.asian_handicap);
+                if (handicapVal <= -1) { totalScore += 10;
+                    details.push('亚盘深盘支持主队'); } else if (handicapVal <= -0.5) { totalScore += 6;
+                    details.push('亚盘倾向主队'); } else if (handicapVal >= 1) { totalScore -= 10;
+                    details.push('亚盘深盘支持客队'); } else if (handicapVal >= 0.5) { totalScore -= 6;
+                    details.push('亚盘倾向客队'); } else { details.push('亚盘盘口均衡'); }
+            } else {
+                scores.asian = null;
+            }
+
+            // 5. 主客场因素 (权重15%)
+            scores.homeAdvantage = true;
+            totalScore += 5;
+            details.push('主队拥有主场优势');
+
+            // 限制分数范围
+            totalScore = Math.max(10, Math.min(95, Math.round(totalScore)));
+
+            return {
+                totalScore,
+                scores,
+                details,
+                homeRecentParsed,
+                awayRecentParsed,
+                homeFormScore,
+                awayFormScore,
+            };
+        }
+
+        function parseRecentForm(recentStr) {
+            if (!recentStr) return [];
+            const cleaned = recentStr.replace(/[\s,，]+/g, '').toUpperCase();
+            const results = [];
+            for (const ch of cleaned) {
+                if (ch === 'W' || ch === '胜') results.push('W');
+                else if (ch === 'D' || ch === '平') results.push('D');
+                else if (ch === 'L' || ch === '负') results.push('L');
+            }
+            return results.slice(0, 5);
+        }
+
+        function calculateFormScore(formArr) {
+            if (formArr.length === 0) return 50;
+            let score = 50;
+            const weights = [1.5, 1.3, 1.1, 0.9, 0.7];
+            formArr.forEach((r, i) => {
+                const w = weights[i] || 0.7;
+                if (r === 'W') score += 8 * w;
+                else if (r === 'D') score += 1 * w;
+                else if (r === 'L') score -= 7 * w;
+            });
+            return Math.round(Math.max(5, Math.min(95, score)));
+        }
+
+        function renderAnalysisResult(match, analysis) {
+            const container = document.getElementById('analysisResult');
+            const scoreClass = analysis.totalScore >= 65 ? 'score-high' : analysis.totalScore >= 40 ? 'score-mid' :
+                'score-low';
+            const verdict = analysis.totalScore >= 65 ? '🏆 主队优势明显' :
+                analysis.totalScore >= 50 ? '⚖️ 略倾向主队' :
+                analysis.totalScore >= 35 ? '⚖️ 略倾向客队' : '🔥 客队优势明显';
+
+            container.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                            <div class="score-circle ${scoreClass}">${analysis.totalScore}</div>
+                            <div>
+                                <div style="font-weight:700;font-size:1.1em;">综合评分</div>
+                                <div style="color:var(--text2);">${verdict}</div>
+                                <div style="font-size:0.8em;color:var(--text2);">满分100 · 分数越高主队越有利</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:14px;">
+                            <div style="font-weight:600;margin-bottom:6px;">📊 分析详情</div>
+                            ${analysis.details.map(d => `<div style="padding:5px 0;font-size:0.85em;color:var(--text2);">• ${d}</div>`).join('')}
+                        </div>
+                        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                            <div style="flex:1;min-width:100px;">
+                                <div style="font-size:0.75em;color:var(--text2);">主队状态分</div>
+                                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${analysis.homeFormScore}%;background:var(--accent);"></div></div>
+                                <div style="font-weight:700;">${analysis.homeFormScore}/100</div>
+                            </div>
+                            <div style="flex:1;min-width:100px;">
+                                <div style="font-size:0.75em;color:var(--text2);">客队状态分</div>
+                                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${analysis.awayFormScore}%;background:var(--accent2);"></div></div>
+                                <div style="font-weight:700;">${analysis.awayFormScore}/100</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:10px;font-size:0.8em;color:var(--text2);">
+                            近期战绩: 🏠 ${analysis.homeRecentParsed.join(' ') || '无数据'} | 🏃 ${analysis.awayRecentParsed.join(' ') || '无数据'}
+                        </div>`;
+        }
+
+        function renderRecommendation(match, analysis) {
+            const panel = document.getElementById('recommendationPanel');
+            let recommendation = '';
+            let confidence = '';
+            let suggestionOdds = '';
+
+            if (analysis.totalScore >= 65) {
+                recommendation = '🎯 推荐：<strong style="color:var(--accent);">主胜</strong>';
+                confidence = '信心指数：⭐⭐⭐⭐ (高)';
+                suggestionOdds = match.odds_home ? `建议赔率阈值：≥${(match.odds_home*0.85).toFixed(2)}` : '';
+            } else if (analysis.totalScore >= 50) {
+                recommendation = '🎯 推荐：<strong style="color:var(--accent);">主胜 / 平局</strong> (双选)';
+                confidence = '信心指数：⭐⭐⭐ (中高)';
+                suggestionOdds = '建议关注主胜&平局赔率';
+            } else if (analysis.totalScore >= 35) {
+                recommendation = '🎯 推荐：<strong style="color:var(--accent2);">客胜 / 平局</strong> (双选)';
+                confidence = '信心指数：⭐⭐⭐ (中高)';
+                suggestionOdds = '建议关注客胜&平局赔率';
+            } else {
+                recommendation = '🎯 推荐：<strong style="color:var(--accent2);">客胜</strong>';
+                confidence = '信心指数：⭐⭐⭐⭐ (高)';
+                suggestionOdds = match.odds_away ? `建议赔率阈值：≥${(match.odds_away*0.85).toFixed(2)}` : '';
+            }
+
+            panel.innerHTML = `
+                        <div class="analysis-card recommend">
+                            <div style="font-size:1.2em;font-weight:700;margin-bottom:8px;">${recommendation}</div>
+                            <div style="color:var(--text2);">${confidence}</div>
+                            <div style="color:var(--warning);font-size:0.85em;margin-top:4px;">${suggestionOdds}</div>
+                            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:0.82em;color:var(--text2);">
+                                📌 综合评分：<strong>${analysis.totalScore}/100</strong><br>
+                                🏠 ${match.home_team} vs 🏃 ${match.away_team}<br>
+                                📅 ${match.date} | 🏟 ${match.league}
+                                ${match.notes ? '<br>📝 ' + escHtml(match.notes) : ''}
+                            </div>
+                            <div style="margin-top:10px;font-size:0.75em;color:var(--text2);background:rgba(255,197,66,0.08);padding:8px 10px;border-radius:6px;">
+                                ⚠️ 免责声明：分析结果仅供参考，不构成投注建议。请理性对待，切勿沉迷。
+                            </div>
+                        </div>`;
+        }
+
+        // ==================== 详情弹窗 ====================
+        function viewDetail(id) {
+            const match = allMatches.find(m => m.id === id);
+            if (!match) return;
+            const modal = document.getElementById('modalContent');
+            modal.innerHTML = `
+                        <button class="close-btn" onclick="closeModalDirect()">✕</button>
+                        <h3>📋 比赛详情</h3>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.9em;">
+                            <div><strong>联赛：</strong>${match.league}</div>
+                            <div><strong>日期：</strong>${match.date}</div>
+                            <div><strong>主队：</strong>${escHtml(match.home_team)} ${match.home_rank ? '(排名#'+match.home_rank+')' : ''}</div>
+                            <div><strong>客队：</strong>${escHtml(match.away_team)} ${match.away_rank ? '(排名#'+match.away_rank+')' : ''}</div>
+                            <div><strong>比分：</strong>${match.score || '未记录'}</div>
+                            <div><strong>亚盘：</strong>${match.asian_handicap || '无'}</div>
+                            <div><strong>欧赔：</strong>${match.odds_home||'-'} / ${match.odds_draw||'-'} / ${match.odds_away||'-'}</div>
+                            <div><strong>主队近期：</strong>${match.home_recent || '无'}</div>
+                            <div><strong>客队近期：</strong>${match.away_recent || '无'}</div>
+                            <div style="grid-column:1/-1;"><strong>备注：</strong>${match.notes || '无'}</div>
+                        </div>
+                        <button class="btn btn-accent2 btn-sm" style="margin-top:14px;" onclick="analyzeMatchById('${match.id}');closeModalDirect();">🔬 分析此比赛</button>`;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal(e) {
+            if (e.target === document.getElementById('modalOverlay')) {
+                document.getElementById('modalOverlay').style.display = 'none';
+            }
+        }
+
+        function closeModalDirect() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        // ==================== 工具函数 ====================
+        function escHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ==================== 启动 ====================
+        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('modalOverlay').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
